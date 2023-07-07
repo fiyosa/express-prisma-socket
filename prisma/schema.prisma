@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model users {
+  id                BigInt    @id @default(autoincrement())
+  email             String    @unique
+  username          String    @unique
+  password          String?
+  name              String
+  bio               String?
+  website           String?
+  gender            gender    @default(OTHER)
+  image             String?
+  image_base64      String?   @db.Text
+  email_verified_at DateTime? @db.Timestamp(0)
+  remember_token    String?
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+
+  room_chats room_chats[]
+  room_joins room_joins[]
+  chats      chats[]
+}
+
+model room_chats {
+  id           BigInt    @id @default(autoincrement())
+  user_id      BigInt?   @db.BigInt
+  type         String
+  last_message String?
+  is_read      Boolean   @default(false)
+  revoked      Boolean   @default(false)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+
+  user       users?       @relation(fields: [user_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  room_joins room_joins[]
+  chats      chats[]
+}
+
+model room_joins {
+  id           BigInt    @id @default(autoincrement())
+  room_chat_id BigInt    @db.BigInt
+  user_id      BigInt    @db.BigInt
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+
+  room_chat room_chats @relation(fields: [room_chat_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  user      users      @relation(fields: [user_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+}
+
+model chats {
+  id           BigInt    @id @default(autoincrement())
+  room_chat_id BigInt    @db.BigInt
+  user_id      BigInt    @db.BigInt
+  message      String    @db.Text
+  is_viewed    Boolean   @default(false)
+  revoked      Boolean   @default(false)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+
+  room_chat room_chats @relation(fields: [room_chat_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  user      users      @relation(fields: [user_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+}
